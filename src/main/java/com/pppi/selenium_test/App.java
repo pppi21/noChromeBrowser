@@ -26,16 +26,16 @@ public class App {
 	public App(JLabel counter) {
 		
 	  WebDriverManager.chromedriver().setup();
-	  // Set the path to the driver
+	 
 
       
       ChromeOptions options = new ChromeOptions();
-      options.addArguments("--remote-allow-origins=*"); // Sometimes needed for compatibility
+      options.addArguments("--remote-allow-origins=*");
 
-      // Initialize WebDriver
+    
       driver = new ChromeDriver(options);
       
-      // Open a website
+     
       driver.get("https://abrahamjuliot.github.io/creepjs/");
       browserCount++;
       browserNum = browserCount;
@@ -54,7 +54,7 @@ public class App {
 	    ChromeOptions options = new ChromeOptions();
 	    options.addArguments("--remote-allow-origins=*");
 
-	    // Generate the proxy extension with the provided proxy
+	   
 	    try {
 	        String extensionPath = createProxyExtension(proxy);
 	        options.addExtensions(new File(extensionPath));
@@ -62,7 +62,7 @@ public class App {
 	        e.printStackTrace();
 	        JOptionPane.showMessageDialog(null, "Failed to create proxy extension: " + e.getMessage(),
 	                "Error", JOptionPane.ERROR_MESSAGE);
-	        return; // Exit constructor if proxy setup fails
+	        return; 
 	    }
 
 	    driver = new ChromeDriver(options);
@@ -79,8 +79,8 @@ public class App {
 	    Thread statusCheckThread = new Thread(() -> {
 	        while (isRunning) {
 	            try {
-	                driver.getTitle(); // Check if driver session is still active
-	                Thread.sleep(1000); // Wait 1 second between checks
+	                driver.getTitle();
+	                Thread.sleep(1000);
 	            } catch (NoSuchWindowException | InterruptedException e) {
 	                System.out.println("Browser window closed by user.");
 	                close();
@@ -88,15 +88,15 @@ public class App {
 	            }
 	        }
 	    });
-	    statusCheckThread.setDaemon(true); // Ensure the thread stops when the app exits
+	    statusCheckThread.setDaemon(true);
 	    statusCheckThread.start();
 	}
 	
 	private String createProxyExtension(String proxy) throws IOException {
-	    // Create a temporary directory for the extension
+	   
 	    Path extensionDir = Files.createTempDirectory("proxy_extension");
 
-	    // Prepare the manifest.json content
+	   
 	    String manifestContent = "{\n" +
 	            "  \"manifest_version\": 2,\n" +
 	            "  \"name\": \"Proxy Auth Extension\",\n" +
@@ -115,7 +115,7 @@ public class App {
 	            "  }\n" +
 	            "}";
 
-	    // Parse the proxy string (assumed format: username:password@host:port)
+	    
 	    String[] proxyParts = proxy.split("@");
 	    if (proxyParts.length != 2) {
 	        throw new IllegalArgumentException("Invalid proxy format. Expected format: username:password@host:port");
@@ -167,21 +167,20 @@ public class App {
 	            "    [\"blocking\"]\n" +
 	            ");";
 
-	    // Write manifest.json and background.js to the extension directory
+	    
 	    Path manifestPath = extensionDir.resolve("manifest.json");
 	    Files.write(manifestPath, manifestContent.getBytes(StandardCharsets.UTF_8));
 
 	    Path backgroundJsPath = extensionDir.resolve("background.js");
 	    Files.write(backgroundJsPath, backgroundJsContent.getBytes(StandardCharsets.UTF_8));
 
-	    // Zip the extension directory
+	    
 	    String extensionZipPath = extensionDir.toString() + ".zip";
 	    zipFolder(extensionDir.toFile(), new File(extensionZipPath));
 
-	    // Store the path for cleanup later
+	   
 	    this.extensionZipPath = extensionZipPath;
-
-	    // Return the path to the zipped extension
+	    
 	    return extensionZipPath;
 	}
 	
@@ -214,18 +213,18 @@ public class App {
 	
 	public void close() {
 	    if (driver != null) {
-	        driver.quit();  // Close the browser window
+	        driver.quit(); 
 	    }
-	    browserCount--; // Decrement the count when a browser is closed
+	    browserCount--; 
 	    System.out.println("Browser " + browserNum + " closed. Remaining open browsers: " + browserCount);
 	    isRunning = false;
 	    counter.setText("Open Browsers: " + App.browserCount);
 
-	    // Delete the extension zip file and temporary directory
+	   
 	    if (extensionZipPath != null) {
 	        try {
 	            Files.deleteIfExists(Paths.get(extensionZipPath));
-	            // Delete the temporary extension directory
+	            
 	            Path extensionDir = Paths.get(extensionZipPath.replace(".zip", ""));
 	            Files.walk(extensionDir)
 	                    .sorted(Comparator.reverseOrder())
