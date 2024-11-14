@@ -18,6 +18,7 @@ public class App {
 	public static int browserCount;
 	private int browserNum;
 	private String proxy = "";
+	private String secProxy = "";
 	private WebDriver driver;
 	private boolean isRunning = true;
 	private JLabel counter;
@@ -46,9 +47,10 @@ public class App {
      
   }
 	
-	public App(JLabel counter, String proxy) {
+	public App(JLabel counter, String proxy, String secProxy) {
 	    this.counter = counter;
 	    this.proxy = proxy;
+	    this.secProxy = secProxy;
 	    WebDriverManager.chromedriver().setup();
 
 	    ChromeOptions options = new ChromeOptions();
@@ -56,7 +58,7 @@ public class App {
 
 	   
 	    try {
-	        String extensionPath = createProxyExtension(proxy);
+	        String extensionPath = createProxyExtension(proxy, secProxy);
 	        options.addExtensions(new File(extensionPath));
 	    } catch (IOException | IllegalArgumentException e) {
 	        e.printStackTrace();
@@ -92,7 +94,7 @@ public class App {
 	    statusCheckThread.start();
 	}
 	
-	private String createProxyExtension(String proxy) throws IOException {
+	private String createProxyExtension(String proxy, String secProxy) throws IOException {
 	   
 	    Path extensionDir = Files.createTempDirectory("proxy_extension");
 
@@ -116,29 +118,7 @@ public class App {
 	            "}";
 
 	    
-	    String[] proxyParts = proxy.split("@");
-	    if (proxyParts.length != 2) {
-	        throw new IllegalArgumentException("Invalid proxy format. Expected format: username:password@host:port");
-	    }
-
-	    String credentials = proxyParts[0];
-	    String hostPort = proxyParts[1];
-
-	    String[] credentialParts = credentials.split(":", 2);
-	    if (credentialParts.length != 2) {
-	        throw new IllegalArgumentException("Invalid credentials format. Expected format: username:password");
-	    }
-
-	    String username = credentialParts[0];
-	    String password = credentialParts[1];
-
-	    String[] hostPortParts = hostPort.split(":", 2);
-	    if (hostPortParts.length != 2) {
-	        throw new IllegalArgumentException("Invalid host and port format. Expected format: host:port");
-	    }
-
-	    String proxyHost = hostPortParts[0];
-	    String proxyPort = hostPortParts[1];
+	    
 
 	    // Prepare the background.js content
 	    String backgroundJsContent = "var config = {\n" +
@@ -146,8 +126,8 @@ public class App {
 	            "    rules: {\n" +
 	            "      singleProxy: {\n" +
 	            "        scheme: \"http\",\n" +
-	            "        host: \"" + proxyHost + "\",\n" +
-	            "        port: parseInt(\"" + proxyPort + "\")\n" +
+	            "        host: \"" + data(proxy,"host") + "\",\n" +
+	            "        port: parseInt(\"" + data(proxy,"port") + "\")\n" +
 	            "      }\n" +
 	            "    }\n" +
 	            "};\n" +
@@ -158,8 +138,8 @@ public class App {
 	            "    function(details) {\n" +
 	            "        return {\n" +
 	            "            authCredentials: {\n" +
-	            "                username: \"" + username + "\",\n" +
-	            "                password: \"" + password + "\"\n" +
+	            "                username: \"" + data(proxy,"username") + "\",\n" +
+	            "                password: \"" + data(proxy,"password") + "\"\n" +
 	            "            }\n" +
 	            "        };\n" +
 	            "    },\n" +
@@ -184,6 +164,28 @@ public class App {
 	    return extensionZipPath;
 	}
 	
+	private String data(String proxy, String i) {
+		String[] proxyParts = proxy.split(":");
+	    if (proxyParts.length != 4) {
+	        throw new IllegalArgumentException("Invalid proxy format. Expected format: host:port:username:password");
+	    }
+	    if(i.equals("host")){
+	    	return proxyParts[0];
+	    }
+	    else if(i.equals("port")) {
+	    	return proxyParts[1];
+	    }
+	    else if(i.equals("username")) {
+	    	return proxyParts[2];
+	    }
+	    else if(i.equals("password")) {
+	    	return proxyParts[3];
+	    }
+	    else {
+	    	return null;
+	    }
+        
+	}
 	private void zipFolder(File sourceFolder, File zipFile) throws IOException {
 	    try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
 	        zipFolderRecursive(zos, sourceFolder, sourceFolder.getAbsolutePath().length() + 1);
